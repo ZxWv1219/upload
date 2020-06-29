@@ -1,12 +1,26 @@
 <!--  -->
 <template>
   <div class>
+    <div class="nav-bar">
+      <div class="company">三江分公司</div>
+      <div class="userinfo">
+        <p class="name">周杰伦</p>
+        <p class="phone">15577220099</p>
+      </div>
+    </div>
+    <div class="count">
+      <div class="count-item">111</div>
+      <div class="count-item">111</div>
+      <div class="count-item">111</div>
+    </div>
+    <tab-control ref="tabControl" :titles="['上传','已上传']" @tabClick="tabClick"></tab-control>
     <!--dom结构部分-->
     <div id="uploader-demo">
       <!--用来存放item-->
       <div id="fileList" class="uploader-list"></div>
-      <div id="filePicker">选择图片</div>
+      <div id="imgPicker">选择图片</div>
     </div>
+    <home-swiper :banners="banners" @swiperImageFinishLoad="swiperImageFinishLoad"></home-swiper>
   </div>
 </template>
 
@@ -16,13 +30,25 @@
 import jquery from '@/static/jquery-2.0.0.min'
 import WebUploader from '@/static/webuploader'
 
+import TabControl from '@/components/tabControl/TabControl'
+import HomeSwiper from '@/views/home/childComponents/HomeSwiper'
+
 export default {
   //import引入的组件需要注入到对象中才能使用
-  components: {},
+  components: {
+    TabControl,
+    HomeSwiper
+  },
   data() {
     //这里存放数据
     return {
-
+      banners: [
+        {
+          image:'https://i.loli.net/2020/06/22/oiCVAjsv1lmeHSb.jpg'
+        },{
+          image:'https://i.loli.net/2020/06/22/OgvnDLyV8tIYuwp.jpg'
+        }
+      ],
     }
   },
   //监听属性 类似于data概念
@@ -31,7 +57,12 @@ export default {
   watch: {},
   //方法集合
   methods: {
+    tabClick(index) {
+      this.$refs.tabControl.currentIndex = index
+    },
+    swiperImageFinishLoad() {
 
+    }
   },
   //生命周期 - 创建完成（可以访问当前this实例）
   created() {
@@ -51,7 +82,7 @@ export default {
 
       // 选择文件的按钮。可选。
       // 内部根据当前运行是创建，可能是input元素，也可能是flash.
-      pick: '#filePicker',
+      pick: '#imgPicker',
 
       // 只允许选择图片文件。
       accept: {
@@ -144,4 +175,36 @@ export default {
 }
 </script>
 <style scoped>
+.nav-bar {
+  display: flex;
+  height: 70px;
+  text-align: center;
+  box-shadow: 0 1px 1px rgba(100, 100, 100, 0.1);
+}
+.company {
+  line-height: 70px;
+  flex: 1;
+}
+.userinfo {
+  width: 150px;
+}
+
+.count {
+  display: flex;
+  text-align: center;
+  font-size: 14px;
+  width: 100%;
+
+  padding: 10px 0 20px 0;
+
+  border-bottom: 8px solid #eeeeee;
+}
+.count-item {
+  flex: 1;
+  width: 77px;
+  height: 77px;
+  margin-bottom: 5px;
+  border: 2px solid #eeeeee;
+  border-radius: 20px;
+}
 </style>
