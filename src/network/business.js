@@ -15,7 +15,7 @@ export function getTotalNum() {
  * 获取文件列表 
  * @param {*} start 从第几行开始（int）
  * @param {*} limit 每页显示行数（int）
- * @param {*} type 0显示分公司  1：只看自己
+ * @param {*} type  0 显示分公司  1：只看自己
  * @param {*} orderby 排序 例：createTime desc
  */
 export function getFiles(start = 0, limit = 50, type = 0, orderby) {

@@ -58,3 +58,8 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ### 权限
 managerCode 0 个人 只显示self
 managerCode 1 管理员 count 全显示
+
+### 2020-07-01
+角色为0的时候 默认只看自己 只看自己显示删除图片的图标
+角色为1的时候 全部和只看自己都可以删除
+图片显示排序

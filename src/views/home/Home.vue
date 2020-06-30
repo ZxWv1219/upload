@@ -39,10 +39,15 @@
         <home-swiper :banners="banners" @swiperImageFinishLoad="swiperImageFinishLoad"></home-swiper>
       </van-tab>
       <van-tab title="已上传">
+        <van-dropdown-menu class="dropdown-menu">
+          <van-dropdown-item v-model="value1" @change="dropdownChange1" :options="option1" />
+          <van-dropdown-item v-model="value2" @change="dropdownChange2" :options="option2" />
+        </van-dropdown-menu>
         <van-uploader
           class="image-show"
           v-model="imageList"
           :show-upload="isShow"
+          :before-delete="beforeDelete"
           @delete="deleteImage"
           multiple
           disabled
@@ -84,10 +89,22 @@ export default {
   data() {
     //这里存放数据
     return {
+      value1: 0,
+      value2: 'createTime desc',
+      option1: [
+        { text: '全部', value: 0 },
+        { text: '只看自己', value: 1 }
+      ],
+      option2: [
+        { text: '按时间↑', value: 'createTime asc' },
+        { text: '按时间↓', value: 'createTime desc' }
+      ],
       pageData: new Map(),
       //图片总数量
       totalCount: 0,
       limit: 16,
+      //图片排序
+      orderBy: null,
       currentPage: 1,
       managerCode: 0,
       isShow: false,
@@ -144,8 +161,26 @@ export default {
   watch: {},
   //方法集合
   methods: {
+    dropdownChange1(value) {
+      console.log(value)
+    },
+    dropdownChange2(value) {
+      console.log(value)
+    },
+    beforeDelete(file) {
+      if (file.creater == '000') {
+        this.$toast("无权删除")
+        return false
+      }
+      if (this.managerCode != 1) {
+        if (this.userInfo.user.id != file.creater) {
+          this.$toast("无权删除")
+          return false
+        }
+      }
+      return true
+    },
     deleteImage(file) {
-      console.log(file)
       removeFile(file.id).then(res => {
         console.log(res)
         return res.success
@@ -154,6 +189,7 @@ export default {
     onTabClick(index) {
       if (index === 1) {
         this.pageData = new Map()
+        this.currentPage = 1
         this.tabUploaded(0, this.limit)
       }
       if (index === 0) {
@@ -168,10 +204,11 @@ export default {
       } else {
         getFiles(page * limit, limit).then(res => {
           if (res.success) {
+            // console.log(res.data)
             this.totalCount = res.total
             this.imageList = []
             res.data.forEach(item => {
-              this.imageList.push({ id: item.id, url: item.url })
+              this.imageList.push({ id: item.id, url: item.url, creater: item.creater })
             })
             this.pageData.set(page, this.imageList)
           }

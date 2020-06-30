@@ -13,7 +13,10 @@ import { Image as VanImage } from 'vant';
 import { Col, Row } from 'vant';
 import { Grid, GridItem } from 'vant';
 import { Pagination } from 'vant';
+import { DropdownMenu, DropdownItem } from 'vant';
 
+Vue.use(DropdownMenu);
+Vue.use(DropdownItem);
 Vue.use(Pagination);
 Vue.use(Grid);
 Vue.use(GridItem);
