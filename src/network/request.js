@@ -7,8 +7,8 @@ import storage from '@/store/myStorage'
  * 是否开发 true / false
  */
 export function crossDomain() {
-  return ''
-  // return '/api'
+  // return ''
+  return '/api'
 }
 
 export function request(config, method = 'get', router) {
@@ -21,7 +21,7 @@ export function request(config, method = 'get', router) {
 
   const req = axios.create({
     // baseURL: "http://www.lz-10086.com/webupload",
-    baseURL: "/webupload",
+    // baseURL: "/webupload",
     // baseURL: "http://193.193.50.98:8080/",
     method: method,
     timeout: 10000,

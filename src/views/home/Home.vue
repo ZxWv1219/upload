@@ -156,6 +156,9 @@ export default {
         this.pageData = new Map()
         this.tabUploaded(0, this.limit)
       }
+      if (index === 0) {
+        this.fileList = []
+      }
     },
     tabUploading() { },
     tabUploaded(page, limit) {
