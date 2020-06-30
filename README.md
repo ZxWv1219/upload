@@ -53,3 +53,8 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
     "total":0
 }
 ```
+
+
+### 权限
+managerCode 0 个人 只显示self
+managerCode 1 管理员 count 全显示

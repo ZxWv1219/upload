@@ -8,5 +8,22 @@ module.exports = {
       preProcessor: 'less',
       patterns: [path.resolve(__dirname, './src/assets/css/base.less')] // less所在文件路径
     }
-  }
+  },
+  devServer: {
+    proxy: {
+      '/api': {
+        // target: 'http://193.193.50.98:8080',
+        target: 'http://www.lz-10086.com/webupload',
+        // 允许跨域
+        changeOrigin: true,
+        ws: true,
+        pathRewrite: {
+          '^/api': ''
+        }
+      }
+    }
+  },
+  publicPath: process.env.NODE_ENV === 'production'
+    ? './'
+    : '/'
 }

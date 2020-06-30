@@ -2,167 +2,220 @@
 <template>
   <div class>
     <div class="nav-bar">
-      <div class="company">三江分公司</div>
+      <!-- <div class="company">三江分公司</div>-->
+      <div class="company">{{userInfo.deptName}}</div>
       <div class="userinfo">
-        <p class="name">周杰伦</p>
-        <p class="phone">15577220099</p>
+        <p class="name">{{userInfo.user.name || ''}}</p>
+        <p class="phone">{{userInfo.user.id}}</p>
+        <!--  <p class="name">周杰伦</p>
+        <p class="phone">15577220012</p>-->
       </div>
     </div>
     <div class="count">
-      <div class="count-item">111</div>
-      <div class="count-item">111</div>
-      <div class="count-item">111</div>
+      <div class="count-item">{{totalNum.totalNum||0}}</div>
+      <div class="count-item">{{totalNum.uploadNum||0}}</div>
+      <div class="count-item">{{totalNum.selfNum||0}}</div>
     </div>
-    <tab-control ref="tabControl" :titles="['上传','已上传']" @tabClick="tabClick"></tab-control>
-    <!--dom结构部分-->
-    <div id="uploader-demo">
-      <!--用来存放item-->
-      <div id="fileList" class="uploader-list"></div>
-      <div id="imgPicker">选择图片</div>
-    </div>
-    <home-swiper :banners="banners" @swiperImageFinishLoad="swiperImageFinishLoad"></home-swiper>
+
+    <van-tabs v-model="active" @click="onTabClick">
+      <van-tab title="上传">
+        <van-uploader class="image-show" v-model="fileList" :after-read="afterRead" multiple />
+        <home-swiper :banners="banners" @swiperImageFinishLoad="swiperImageFinishLoad"></home-swiper>
+      </van-tab>
+      <van-tab title="已上传">
+        <van-uploader
+          class="image-show"
+          v-model="imageList"
+          :show-upload="isShow"
+          @delete="deleteImage"
+          multiple
+          disabled
+        />
+        <!--
+        <div>
+          <div class="image-item">
+            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
+            <p>1</p>
+          </div>
+          <div class="image-item">
+            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
+            <p>1</p>
+          </div>
+          <div class="image-item">
+            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
+            <p>1</p>
+          </div>
+          <div class="image-item">
+            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
+            <p>1</p>
+          </div>
+          <div class="image-item">
+            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
+            <p>1</p>
+          </div>
+        </div>
+        -->
+      </van-tab>
+    </van-tabs>
+    <!--<tab-control ref="tabControl" :titles="['上传','已上传']" @tabClick="tabClick"></tab-control>-->
   </div>
 </template>
 
 <script>
 //这里可以导入其他文件（比如：组件，工具js，第三方插件js，json文件，图片文件等等）
 //例如：import 《组件名称》 from '《组件路径》';
-import jquery from '@/static/jquery-2.0.0.min'
-import WebUploader from '@/static/webuploader'
+// import jquery from '@/static/jquery-2.0.0.min'
+// import WebUploader from '@/static/webuploader'
 
-import TabControl from '@/components/tabControl/TabControl'
+// import TabControl from '@/components/tabControl/TabControl'
 import HomeSwiper from '@/views/home/childComponents/HomeSwiper'
+import { Button } from 'vant'
+
+import storage from '@/store/myStorage'
+import * as types from '@/store/mutations-types'
+import { getUserInfo } from '@/network/userInfo'
+import { getTotalNum, getFiles, updateFile, removeFile } from '@/network/business'
+
 
 export default {
   //import引入的组件需要注入到对象中才能使用
   components: {
-    TabControl,
     HomeSwiper
   },
   data() {
     //这里存放数据
     return {
+      isShow: false,
+      active: 2,
+      imageList: [
+        // { url: 'https://img.yzcdn.cn/vant/leaf.jpg' },
+        // { url: 'https://img.yzcdn.cn/vant/leaf.jpg' },
+        // { url: 'https://img.yzcdn.cn/vant/leaf.jpg' },
+        // { url: 'https://img.yzcdn.cn/vant/leaf.jpg' }
+      ],
+      fileList: [
+        // { url: 'https://img.yzcdn.cn/vant/leaf.jpg' },
+        // Uploader 根据文件后缀来判断是否为图片文件
+        // 如果图片 URL 中不包含类型信息，可以添加 isImage 标记来声明
+        // { url: 'https://cloud-image', isImage: true },
+      ],
+      userInfo: {
+        user: {}
+      },
+      totalNum: {},
       banners: [
-        {
-          image:'https://i.loli.net/2020/06/22/oiCVAjsv1lmeHSb.jpg'
-        },{
-          image:'https://i.loli.net/2020/06/22/OgvnDLyV8tIYuwp.jpg'
-        }
+        { image: 'http://111.12.86.155:8332/swiper/1.png' },
+        { image: 'http://111.12.86.155:8332/swiper/2.png' },
+        { image: 'http://111.12.86.155:8332/swiper/3.png' },
+        { image: 'http://111.12.86.155:8332/swiper/4.png' },
       ],
     }
   },
   //监听属性 类似于data概念
-  computed: {},
+  computed: {
+    selfNum() {
+      return (this.totalNum.selfNum || 0).toString()
+    }
+  },
   //监控data中的数据变化
   watch: {},
   //方法集合
   methods: {
+    deleteImage(file) {
+      console.log(file)
+      removeFile(file.id).then(res => {
+        console.log(res)
+        return res.success
+      })
+    },
+    onTabClick(index) {
+      if (index === 1) {
+        this.tabUploaded()
+      }
+    },
+    tabUploading() { },
+    tabUploaded() {
+
+
+      getFiles().then(res => {
+        this.imageList = []
+        res.data.forEach(item => {
+          this.imageList.push({ id: item.id, url: item.url })
+        })
+        console.log(this.imageList)
+      })
+    },
     tabClick(index) {
       this.$refs.tabControl.currentIndex = index
     },
+    //监听文件上传
+    afterRead(file) {
+      // 此时可以自行将文件上传至服务器
+      console.log(file.length);
+      let num = file.length || 1
+      if (num > 1) {
+        file.forEach(itemFile => {
+          this.imageUpload(itemFile)
+        })
+      } else { this.imageUpload(file) }
+    },
+    imageUpload(file) {
+      file.status = 'uploading';
+      file.message = '上传中...';
+      updateFile(file).then(res => {
+        console.log(res)
+        if (res.success) {
+          file.status = 'done';
+          file.message = '上传成功';
+        } else {
+          file.status = 'failed';
+          file.message = '上传失败';
+        }
+      }, err => {
+        file.status = 'failed';
+        file.message = '上传失败';
+      })
+    },
     swiperImageFinishLoad() {
 
+    },
+    //设置用户信息
+    setUserInfo() {
+      let token = storage.get('token')
+      if (!token) {
+        this.$router.push('/login')
+        return
+      }
+      //根据token获取用户信息
+      getUserInfo(this.$router).then(res => {
+        if (res.success) {
+          //保存用户状态到vuex
+          this.$store.commit(types.USER_INFO, res.data)
+          //获取统计数据
+          this.getTotalNum()
+          this.userInfo = res.data
+        } else {
+          this.$router.push('/login')
+        }
+      })
+    },
+    //获取统计数据
+    getTotalNum() {
+      getTotalNum().then(res => {
+        this.totalNum = res.data || {}
+      })
+    },
+    /* 页面初始化 */
+    init() {
+      this.setUserInfo()
     }
+
   },
   //生命周期 - 创建完成（可以访问当前this实例）
   created() {
-
   },
   //生命周期 - 挂载完成（可以访问DOM元素）
   mounted() {
-    var uploader = WebUploader.create({
-      // 选完文件后，是否自动上传。
-      auto: true,
-      resize: true,
-      // swf文件路径
-      swf: '../static/Uploader.swf',
-
-      // 文件接收服务端。
-      server: 'http://webuploader.duapp.com/server/fileupload.php',
-
-      // 选择文件的按钮。可选。
-      // 内部根据当前运行是创建，可能是input元素，也可能是flash.
-      pick: '#imgPicker',
-
-      // 只允许选择图片文件。
-      accept: {
-        title: 'Images',
-        extensions: 'gif,jpg,jpeg,bmp,png',
-        mimeTypes: 'image/*'
-      }
-    });
-
-
-    uploader.on('beforeFileQueued', function (file) {
-      console.log('文件加入队前', file)
-    });
-
-    uploader.on('uploadComplete', function (file) {
-      console.log('文件上传完成')
-      $('#' + file.id).find('.progress').fadeOut();
-    });
-
-
-    // 文件上传过程中创建进度条实时显示。
-    uploader.on('uploadProgress', function (file, percentage) {
-      var $li = $('#' + file.id),
-        $percent = $li.find('.progress span');
-
-      // 避免重复创建
-      if (!$percent.length) {
-        $percent = $('<p class="progress"><span></span></p>')
-          .appendTo($li)
-          .find('span');
-      }
-
-      $percent.css('width', percentage * 100 + '%');
-    });
-
-    // 文件上传成功，给item添加成功class, 用样式标记上传成功。
-    uploader.on('uploadSuccess', function (file) {
-      $('#' + file.id).addClass('upload-state-done');
-      console.log('文件上传成功', file, response)
-      $('#' + file.id).find('p.state').text('已上传');
-    });
-
-    // 当有文件添加进来的时候
-    uploader.on('fileQueued', function (file) {
-      var $list = $('#fileList')
-      var $li = $(
-        '<div id="' + file.id + '" class="file-item thumbnail">' +
-        '<img>' +
-        '<div class="info">' + file.name + '</div>' +
-        '</div>'
-      ), $img = $li.find('img')
-
-      // $list为容器jQuery实例
-      $list.append($li);
-      let thumbnailWidth = 100
-      let thumbnailHeight = 100
-      // 创建缩略图
-      // 如果为非图片文件，可以不用调用此方法。
-      // thumbnailWidth x thumbnailHeight 为 100 x 100
-      uploader.makeThumb(file, function (error, src) {
-        if (error) {
-          $img.replaceWith('<span>不能预览</span>');
-          return;
-        }
-        $img.attr('src', src);
-      }, thumbnailWidth, thumbnailHeight);
-    });
-
-    // 文件上传失败，显示上传出错。
-    uploader.on('uploadError', function (file) {
-      var $li = $('#' + file.id),
-        $error = $li.find('div.error');
-
-      // 避免重复创建
-      if (!$error.length) {
-        $error = $('<div class="error"></div>').appendTo($li);
-      }
-
-      $error.text('上传失败');
-    });
 
   },
   beforeCreate() { }, //生命周期 - 创建之前
@@ -171,7 +224,9 @@ export default {
   updated() { }, //生命周期 - 更新之后
   beforeDestroy() { }, //生命周期 - 销毁之前
   destroyed() { }, //生命周期 - 销毁完成
-  activated() { }, //如果页面有keep-alive缓存功能，这个函数会触发
+  activated() {
+    this.init()
+  }, //如果页面有keep-alive缓存功能，这个函数会触发
 }
 </script>
 <style scoped>
@@ -179,9 +234,12 @@ export default {
   display: flex;
   height: 70px;
   text-align: center;
-  box-shadow: 0 1px 1px rgba(100, 100, 100, 0.1);
+  box-shadow: 0 1px 1px rgba(6, 202, 120, 0.1);
+  background-color: #009688;
+  color: #eee;
 }
 .company {
+  font-size: 20px;
   line-height: 70px;
   flex: 1;
 }
@@ -189,22 +247,43 @@ export default {
   width: 150px;
 }
 
+.allcount {
+  color: #ec704b;
+}
+
 .count {
   display: flex;
   text-align: center;
-  font-size: 14px;
+  line-height: 77px;
+  font-size: 25px;
   width: 100%;
-
   padding: 10px 0 20px 0;
-
   border-bottom: 8px solid #eeeeee;
 }
 .count-item {
+  color: #ec704b;
+  background-color: #EEEDED;
   flex: 1;
   width: 77px;
   height: 77px;
   margin-bottom: 5px;
   border: 2px solid #eeeeee;
   border-radius: 20px;
+}
+.image-show {
+  padding: 10px 0 0 15px;
+}
+.image-item {
+  display: inline-block;
+  width: 100px;
+  margin-left: 17px;
+  margin-top: 10px;
+}
+.image-item img {
+  width: 100px;
+  height: 100px;
+}
+.image-item p {
+  margin-left: 50%;
 }
 </style>
