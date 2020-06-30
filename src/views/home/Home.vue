@@ -11,15 +11,31 @@
         <p class="phone">15577220012</p>-->
       </div>
     </div>
-    <div class="count">
-      <div class="count-item">{{totalNum.totalNum||0}}</div>
-      <div class="count-item">{{totalNum.uploadNum||0}}</div>
-      <div class="count-item">{{totalNum.selfNum||0}}</div>
+    <div class="count" v-show="isManager">
+      <div class="count-item">
+        <div class="count-item-num">{{totalNum.totalNum||0}}</div>
+        <div class="count-item-text">总任务量</div>
+      </div>
+      <div class="count-item">
+        <div class="count-item-num">{{totalNum.uploadNum||0}}</div>
+        <div class="count-item-text">总上传</div>
+      </div>
+      <div class="count-item">
+        <div class="count-item-num">{{notFinishNum}}</div>
+        <div class="count-item-text">未完成</div>
+      </div>
+    </div>
+    <div class="count" v-show="!isManager">
+      <div class="count-item">
+        <div class="count-item-single">{{totalNum.selfNum||0}}</div>
+        <div class="count-item-text">己上传</div>
+      </div>
     </div>
 
-    <van-tabs v-model="active" @click="onTabClick">
+    <van-tabs v-model="active" @click="onTabClick" color="#009688">
       <van-tab title="上传">
         <van-uploader class="image-show" v-model="fileList" :after-read="afterRead" multiple />
+        <div class="mark-text">上传示例↓</div>
         <home-swiper :banners="banners" @swiperImageFinishLoad="swiperImageFinishLoad"></home-swiper>
       </van-tab>
       <van-tab title="已上传">
@@ -31,30 +47,13 @@
           multiple
           disabled
         />
-        <!--
-        <div>
-          <div class="image-item">
-            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
-            <p>1</p>
-          </div>
-          <div class="image-item">
-            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
-            <p>1</p>
-          </div>
-          <div class="image-item">
-            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
-            <p>1</p>
-          </div>
-          <div class="image-item">
-            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
-            <p>1</p>
-          </div>
-          <div class="image-item">
-            <img src="https://img.yzcdn.cn/vant/cat.jpeg" />
-            <p>1</p>
-          </div>
-        </div>
-        -->
+        <van-pagination
+          class="tab-pagination"
+          v-model="currentPage"
+          @change="onPagination"
+          :page-count="pageCount"
+          mode="simple"
+        />
       </van-tab>
     </van-tabs>
     <!--<tab-control ref="tabControl" :titles="['上传','已上传']" @tabClick="tabClick"></tab-control>-->
@@ -85,6 +84,12 @@ export default {
   data() {
     //这里存放数据
     return {
+      pageData: new Map(),
+      //图片总数量
+      totalCount: 0,
+      limit: 16,
+      currentPage: 1,
+      managerCode: 0,
       isShow: false,
       active: 2,
       imageList: [
@@ -113,8 +118,26 @@ export default {
   },
   //监听属性 类似于data概念
   computed: {
+    notFinishNum() {
+      let totalNum = this.totalNum.totalNum || 0
+      let uploadNum = this.totalNum.uploadNum || 0
+      return totalNum - uploadNum
+    },
     selfNum() {
       return (this.totalNum.selfNum || 0).toString()
+    },
+    isManager() {
+      return this.managerCode === 1
+    },
+    // 根据数据条数与每页多少条数据计算页数 
+    //totalCount 数据条数
+    //limit 每页多少条
+    pageCount() {
+      return this.totalCount > 0 ?
+        ((this.totalCount < this.limit) ?
+          1 : ((this.totalCount % this.limit) ?
+            (parseInt(this.totalCount / this.limit) + 1) : (this.totalCount / this.limit))) : 0;
+      // return parseInt(pageCount)
     }
   },
   //监控data中的数据变化
@@ -130,20 +153,27 @@ export default {
     },
     onTabClick(index) {
       if (index === 1) {
-        this.tabUploaded()
+        this.pageData = new Map()
+        this.tabUploaded(0, this.limit)
       }
     },
     tabUploading() { },
-    tabUploaded() {
-
-
-      getFiles().then(res => {
-        this.imageList = []
-        res.data.forEach(item => {
-          this.imageList.push({ id: item.id, url: item.url })
+    tabUploaded(page, limit) {
+      let pageData = this.pageData.get(page)
+      if (pageData) {
+        this.imageList = pageData
+      } else {
+        getFiles(page * limit, limit).then(res => {
+          if (res.success) {
+            this.totalCount = res.total
+            this.imageList = []
+            res.data.forEach(item => {
+              this.imageList.push({ id: item.id, url: item.url })
+            })
+            this.pageData.set(page, this.imageList)
+          }
         })
-        console.log(this.imageList)
-      })
+      }
     },
     tabClick(index) {
       this.$refs.tabControl.currentIndex = index
@@ -176,6 +206,9 @@ export default {
         file.message = '上传失败';
       })
     },
+    onPagination(index) {
+      this.tabUploaded(index - 1, this.limit)
+    },
     swiperImageFinishLoad() {
 
     },
@@ -194,6 +227,7 @@ export default {
           //获取统计数据
           this.getTotalNum()
           this.userInfo = res.data
+          this.managerCode = res.data.user.managerCode
         } else {
           this.$router.push('/login')
         }
@@ -247,28 +281,41 @@ export default {
   width: 150px;
 }
 
-.allcount {
-  color: #ec704b;
-}
-
 .count {
   display: flex;
   text-align: center;
-  line-height: 77px;
-  font-size: 25px;
   width: 100%;
-  padding: 10px 0 20px 0;
-  border-bottom: 8px solid #eeeeee;
+  height: 77px;
+  padding: 10px 0 10px 0;
 }
 .count-item {
-  color: #ec704b;
-  background-color: #EEEDED;
+  margin-right: 10px;
+  margin-left: 10px;
+  background-color: #eeeded;
   flex: 1;
   width: 77px;
   height: 77px;
-  margin-bottom: 5px;
   border: 2px solid #eeeeee;
   border-radius: 20px;
+}
+.count-item-num {
+  margin-top: 15%;
+  font-size: 25px;
+  color: #ec704b;
+}
+.count-item-single {
+  margin-top: 5%;
+  font-size: 25px;
+  color: #ec704b;
+}
+.count-item-text {
+  margin-top: 5px;
+  font-size: 13px;
+}
+.mark-text {
+  margin: 10px 0 10px 10px;
+  font-size: 14px;
+  color: #009688;
 }
 .image-show {
   padding: 10px 0 0 15px;
@@ -285,5 +332,11 @@ export default {
 }
 .image-item p {
   margin-left: 50%;
+}
+.tab-pagination {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 15px;
 }
 </style>

@@ -12,7 +12,9 @@ import { Tab, Tabs } from 'vant';
 import { Image as VanImage } from 'vant';
 import { Col, Row } from 'vant';
 import { Grid, GridItem } from 'vant';
+import { Pagination } from 'vant';
 
+Vue.use(Pagination);
 Vue.use(Grid);
 Vue.use(GridItem);
 Vue.use(Col);
