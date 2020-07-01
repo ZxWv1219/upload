@@ -258,18 +258,19 @@ export default {
     },
     //监听文件上传
     afterRead(file) {
-      utils(file.file).then((blob, base64) => {
-        console.log(blob)
-        console.log(base64)
-      })
+      // utils(file.file).then((blob, base64) => {
+      //   console.log(blob)
+      //   console.log(base64)
+      // })
+      
       // 此时可以自行将文件上传至服务器
-      // console.log(file.length);
-      // let num = file.length || 1
-      // if (num > 1) {
-      //   file.forEach(itemFile => {
-      //     this.imageUpload(itemFile)
-      //   })
-      // } else { this.imageUpload(file) }
+      console.log(file.length);
+      let num = file.length || 1
+      if (num > 1) {
+        file.forEach(itemFile => {
+          this.imageUpload(itemFile)
+        })
+      } else { this.imageUpload(file) }
     },
     imageUpload(file) {
       file.status = 'uploading';
