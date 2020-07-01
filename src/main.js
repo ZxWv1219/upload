@@ -3,7 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
-
+//begin==============vant组件==============begin
 import { Button } from 'vant'
 import { Form } from 'vant';
 import { Field } from 'vant';
@@ -29,6 +29,7 @@ Vue.use(Uploader);
 Vue.use(Button);
 Vue.use(Form);
 Vue.use(Field);
+//end==============vant组件==============end
 
 Vue.config.productionTip = false
 

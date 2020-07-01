@@ -49,6 +49,8 @@ export default {
           if (res.success) {
             storage.set('token', res.data.token)
             this.$router.push('/home')
+          } else {
+            this.$toast(res.message)
           }
         })
     }

@@ -4,10 +4,10 @@ import { request, crossDomain } from './request';
 /**
  * 获取统计数据
  */
-export function getTotalNum() {
+export function getTotalNum(isShowToast = true) {
   return request({
     url: crossDomain() + '/files/getTotalNum'
-  })
+  }, 'get', null, isShowToast)
 }
 
 
@@ -32,7 +32,7 @@ export function getFiles(start = 0, limit = 50, type = 0, orderby) {
 
 export function updateFile(file) {
   let formData = new FormData();
-  formData.append('file', file.file);
+  formData.append('file', file);
   return request({
     url: crossDomain() + '/files/uploadFile',
     headers: {

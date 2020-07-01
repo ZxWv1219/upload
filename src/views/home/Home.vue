@@ -40,8 +40,8 @@
       </van-tab>
       <van-tab title="已上传">
         <van-dropdown-menu class="dropdown-menu">
-          <van-dropdown-item v-model="value1" @change="dropdownChange1" :options="option1" />
-          <van-dropdown-item v-model="value2" @change="dropdownChange2" :options="option2" />
+          <van-dropdown-item v-model="queryType" @change="dropdownChange1" :options="option1" />
+          <van-dropdown-item v-model="orderBy" @change="dropdownChange2" :options="option2" />
         </van-dropdown-menu>
         <van-uploader
           class="image-show"
@@ -80,6 +80,7 @@ import * as types from '@/store/mutations-types'
 import { getUserInfo } from '@/network/userInfo'
 import { getTotalNum, getFiles, updateFile, removeFile } from '@/network/business'
 
+import utils from '@/common/utils'
 
 export default {
   //import引入的组件需要注入到对象中才能使用
@@ -89,8 +90,10 @@ export default {
   data() {
     //这里存放数据
     return {
-      value1: 0,
-      value2: 'createTime desc',
+      //查看图片
+      queryType: 1,
+      //查看图片排序
+      orderBy: 'createTime desc',
       option1: [
         { text: '全部', value: 0 },
         { text: '只看自己', value: 1 }
@@ -102,9 +105,8 @@ export default {
       pageData: new Map(),
       //图片总数量
       totalCount: 0,
-      limit: 16,
+      limit: 12,
       //图片排序
-      orderBy: null,
       currentPage: 1,
       managerCode: 0,
       isShow: false,
@@ -162,10 +164,14 @@ export default {
   //方法集合
   methods: {
     dropdownChange1(value) {
-      console.log(value)
+      this.queryType = value
+      this.pageData = new Map()
+      this.tabUploaded(0, this.limit, this.queryType, this.orderBy)
     },
     dropdownChange2(value) {
-      console.log(value)
+      this.orderBy = value
+      this.pageData = new Map()
+      this.tabUploaded(0, this.limit, this.queryType, this.orderBy)
     },
     beforeDelete(file) {
       if (file.creater == '000') {
@@ -183,6 +189,7 @@ export default {
     deleteImage(file) {
       removeFile(file.id).then(res => {
         console.log(res)
+        res.success && this.getTotalNum(false)
         return res.success
       })
     },
@@ -190,27 +197,58 @@ export default {
       if (index === 1) {
         this.pageData = new Map()
         this.currentPage = 1
-        this.tabUploaded(0, this.limit)
+        this.tabUploaded(0, this.limit, this.queryType, this.orderBy)
       }
       if (index === 0) {
         this.fileList = []
       }
     },
     tabUploading() { },
-    tabUploaded(page, limit) {
+    tabUploaded(page, limit, type, orderBy) {
+      //获取当前页面数据
       let pageData = this.pageData.get(page)
       if (pageData) {
         this.imageList = pageData
+        // //排序图片
+        // this.sortLocalImageList(orderBy)
       } else {
-        getFiles(page * limit, limit).then(res => {
+        //获取服务器分页图片数据
+        getFiles(page * limit, limit, type, orderBy).then(res => {
           if (res.success) {
-            // console.log(res.data)
+            console.log(res.data)
             this.totalCount = res.total
             this.imageList = []
             res.data.forEach(item => {
-              this.imageList.push({ id: item.id, url: item.url, creater: item.creater })
+              this.imageList.push({ id: item.id, url: item.url, creater: item.creater, createTime: item.createTime })
             })
             this.pageData.set(page, this.imageList)
+          }
+        })
+      }
+    },
+    sortLocalImageList(orderBy) {
+      let sortArray
+      //排序
+      if (orderBy.indexOf('desc') > -1) {
+        sortArray = sortByKey(this.imageList, 'createTime', true)
+      } else {
+        sortArray = sortByKey(this.imageList, 'createTime', false)
+      }
+      this.imageList = []
+      sortArray.forEach(item => {
+        this.imageList.push(item)
+      })
+
+      //排序当前图片array
+      function sortByKey(array, key, sort) {
+        return array.sort(function (a, b) {
+          var x = a[key];
+          var y = b[key];
+          //升
+          if (sort) {
+            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+          } else {
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
           }
         })
       }
@@ -220,21 +258,26 @@ export default {
     },
     //监听文件上传
     afterRead(file) {
+      utils(file.file).then((blob, base64) => {
+        console.log(blob)
+        console.log(base64)
+      })
       // 此时可以自行将文件上传至服务器
-      console.log(file.length);
-      let num = file.length || 1
-      if (num > 1) {
-        file.forEach(itemFile => {
-          this.imageUpload(itemFile)
-        })
-      } else { this.imageUpload(file) }
+      // console.log(file.length);
+      // let num = file.length || 1
+      // if (num > 1) {
+      //   file.forEach(itemFile => {
+      //     this.imageUpload(itemFile)
+      //   })
+      // } else { this.imageUpload(file) }
     },
     imageUpload(file) {
       file.status = 'uploading';
       file.message = '上传中...';
-      updateFile(file).then(res => {
+      updateFile(file.file).then(res => {
         console.log(res)
         if (res.success) {
+          this.getTotalNum(false)
           file.status = 'done';
           file.message = '上传成功';
         } else {
@@ -247,7 +290,7 @@ export default {
       })
     },
     onPagination(index) {
-      this.tabUploaded(index - 1, this.limit)
+      this.tabUploaded(index - 1, this.limit, this.queryType, this.orderBy)
     },
     swiperImageFinishLoad() {
 
@@ -274,8 +317,8 @@ export default {
       })
     },
     //获取统计数据
-    getTotalNum() {
-      getTotalNum().then(res => {
+    getTotalNum(isShowToast) {
+      getTotalNum(isShowToast).then(res => {
         this.totalNum = res.data || {}
       })
     },
@@ -287,6 +330,7 @@ export default {
   },
   //生命周期 - 创建完成（可以访问当前this实例）
   created() {
+
   },
   //生命周期 - 挂载完成（可以访问DOM元素）
   mounted() {

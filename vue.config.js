@@ -9,6 +9,7 @@ module.exports = {
       patterns: [path.resolve(__dirname, './src/assets/css/base.less')] // less所在文件路径
     }
   },
+  //正式环境请注释下面代码块
   devServer: {
     proxy: {
       '/api': {

@@ -4,14 +4,14 @@ import { Toast } from 'vant';
 import storage from '@/store/myStorage'
 
 /**
- * 是否开发 true / false
+ * 是否开发 /api 开发, '' 正式环境
  */
 export function crossDomain() {
-  // return ''
-  return '/api'
+  // return ''//正式环境
+  return '/api' //开发
 }
 
-export function request(config, method = 'get', router) {
+export function request(config, method = 'get', router, isShowToast = true) {
   var headers
   if (config.headers) {
     headers = Object.assign(config.headers, { 'token': storage.get('token') })
@@ -20,8 +20,8 @@ export function request(config, method = 'get', router) {
   }
 
   const req = axios.create({
+    // baseURL: "/webupload",//正式环境
     // baseURL: "http://www.lz-10086.com/webupload",
-    // baseURL: "/webupload",
     // baseURL: "http://193.193.50.98:8080/",
     method: method,
     timeout: 10000,
@@ -39,7 +39,7 @@ export function request(config, method = 'get', router) {
       console.log(err)
       return err
     })
-  Toast.loading({
+  isShowToast && Toast.loading({
     duration: 0,
     message: '加载中...',
     forbidClick: true,
@@ -50,7 +50,7 @@ export function request(config, method = 'get', router) {
     res => {
       //统一判断返回结果成功,失败,异常,或token失效等
       //隐藏loading界面
-      Toast.clear()
+      isShowToast && Toast.clear()
       // console.log('*************拦截器response返回res.data*************')
       if (res.data.resultCode == '0002') {
         router.push('/login')
