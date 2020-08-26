@@ -14,7 +14,10 @@ import { Col, Row } from 'vant';
 import { Grid, GridItem } from 'vant';
 import { Pagination } from 'vant';
 import { DropdownMenu, DropdownItem } from 'vant';
+import { Dialog } from 'vant';
 
+// 全局注册
+Vue.use(Dialog);
 Vue.use(DropdownMenu);
 Vue.use(DropdownItem);
 Vue.use(Pagination);

@@ -262,7 +262,7 @@ export default {
       //   console.log(blob)
       //   console.log(base64)
       // })
-      
+
       // 此时可以自行将文件上传至服务器
       console.log(file.length);
       let num = file.length || 1
@@ -335,7 +335,17 @@ export default {
   },
   //生命周期 - 挂载完成（可以访问DOM元素）
   mounted() {
-
+    this.$dialog.alert({
+      title: '拍照注意事项：',
+      messageAlign: 'left',
+      message: `1、村道、巷道里应多拍些。
+2、不能开车的人行道，应多取小路有坎的来取镜拍照。
+3、把手机和相机上的水印关起来（特别要注意地点和时间不能出现）。
+4、拍照时不要出现太多的广角（应主要放在安装位置的10米之内为主要取镜）。
+5、拍照时相片过长（应在拍照时取方形镜头拍照）。`,
+    }).then(() => {
+      // on close
+    });
   },
   beforeCreate() { }, //生命周期 - 创建之前
   beforeMount() { }, //生命周期 - 挂载之前

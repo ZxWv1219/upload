@@ -7,8 +7,8 @@ import storage from '@/store/myStorage'
  * 是否开发 /api 开发, '' 正式环境
  */
 export function crossDomain() {
-  // return ''//正式环境
-  return '/api' //开发
+  return ''//正式环境
+  // return '/api' //开发
 }
 
 export function request(config, method = 'get', router, isShowToast = true) {
@@ -20,7 +20,7 @@ export function request(config, method = 'get', router, isShowToast = true) {
   }
 
   const req = axios.create({
-    // baseURL: "/webupload",//正式环境
+    baseURL: "/webupload",//正式环境
     // baseURL: "http://www.lz-10086.com/webupload",
     // baseURL: "http://193.193.50.98:8080/",
     method: method,

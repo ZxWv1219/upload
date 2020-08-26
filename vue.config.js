@@ -10,20 +10,20 @@ module.exports = {
     }
   },
   //正式环境请注释下面代码块
-  devServer: {
-    proxy: {
-      '/api': {
-        // target: 'http://193.193.50.98:8080',
-        target: 'http://www.lz-10086.com/webupload',
-        // 允许跨域
-        changeOrigin: true,
-        ws: true,
-        pathRewrite: {
-          '^/api': ''
-        }
-      }
-    }
-  },
+  // devServer: {
+  //   proxy: {
+  //     '/api': {
+  //       // target: 'http://193.193.50.98:8080',
+  //       target: 'http://www.lz-10086.com/webupload',
+  //       // 允许跨域
+  //       changeOrigin: true,
+  //       ws: true,
+  //       pathRewrite: {
+  //         '^/api': ''
+  //       }
+  //     }
+  //   }
+  // },
   publicPath: process.env.NODE_ENV === 'production'
     ? './'
     : '/'
